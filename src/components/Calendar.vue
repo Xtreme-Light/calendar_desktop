@@ -1,17 +1,25 @@
 <script setup lang="ts">
-import {FullCalendar }from '@fullcalendar/vue3'
-import CalendarOptions from '@fullcalendar/core'
+import FullCalendar from '@fullcalendar/vue3'
+import {CalendarOptions,EventClickArg,EventHoveringArg} from '@fullcalendar/core'
 import dayGridPlugin from '@fullcalendar/daygrid'
-import interactionPlugin from '@fullcalendar/interaction'
+import interactionPlugin,{DateClickArg} from '@fullcalendar/interaction'
 import { onMounted, ref } from 'vue'
 
-const handleEventClick = (eventClickInfo: any) => {
+const handleEventClick = (eventClickInfo: EventClickArg) => {
     console.log('any event' + eventClickInfo)
 }
 
 
-const handleDateClick = (arg: { dateStr: string; }) =>{
+const handleDateClick = (arg:DateClickArg) =>{
     console.log('date click! ' + arg.dateStr)
+
+}
+const handleEventMouseEnter = (arg: EventHoveringArg) =>{
+    console.log('鼠标移入'+ arg)
+}
+
+const handleEventMouseLeave = (arg: EventHoveringArg) =>{
+    console.log('鼠标移出'+ arg)
 }
 
 const calendarOptions  = ref<CalendarOptions>({
@@ -26,6 +34,8 @@ const calendarOptions  = ref<CalendarOptions>({
     locale:'zh',
     dateClick: handleDateClick,
     eventClick: handleEventClick,
+    eventMouseEnter:handleEventMouseEnter,
+    eventMouseLeave: handleEventMouseLeave,
 });
 
 
