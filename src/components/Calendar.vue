@@ -1,55 +1,79 @@
 <script setup lang="ts">
-import FullCalendar from '@fullcalendar/vue3'
-import {CalendarOptions,EventClickArg,EventHoveringArg} from '@fullcalendar/core'
+// https://blog.csdn.net/lfwoman/article/details/120177637
+// import FullCalendar from '@fullcalendar/vue3'
+import { Calendar, EventSourceFuncArg, EventClickArg, EventHoveringArg, EventInput, EventSourceFunc } from '@fullcalendar/core'
 import dayGridPlugin from '@fullcalendar/daygrid'
-import interactionPlugin,{DateClickArg} from '@fullcalendar/interaction'
-import { onMounted, ref } from 'vue'
+import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction'
+import { onMounted, watch } from 'vue'
+import { invoke } from "@tauri-apps/api/tauri";
 
 const handleEventClick = (eventClickInfo: EventClickArg) => {
     console.log('any event' + eventClickInfo)
 }
 
 
-const handleDateClick = (arg:DateClickArg) =>{
+const handleDateClick = (arg: DateClickArg) => {
     console.log('date click! ' + arg.dateStr)
 
 }
-const handleEventMouseEnter = (arg: EventHoveringArg) =>{
-    console.log('鼠标移入'+ arg)
+const handleEventMouseEnter = (arg: EventHoveringArg) => {
+    console.log('鼠标移入' + arg)
 }
 
-const handleEventMouseLeave = (arg: EventHoveringArg) =>{
-    console.log('鼠标移出'+ arg)
+const handleEventMouseLeave = (arg: EventHoveringArg) => {
+    console.log('鼠标移出' + arg)
 }
 
-const calendarOptions  = ref<CalendarOptions>({
-    plugins: [dayGridPlugin, interactionPlugin],
-    initialView: 'dayGridMonth',
-    buttonText: {
-        today: '今天',
-        month: '月视图',
-        week: '周视图',
-        day: '日视图',
-    },
-    locale:'zh',
-    dateClick: handleDateClick,
-    eventClick: handleEventClick,
-    eventMouseEnter:handleEventMouseEnter,
-    eventMouseLeave: handleEventMouseLeave,
-});
 
 
+const events: EventSourceFunc = async (arg, successCallback, _failureCallback) => {
+    console.log("请求日历数据" + arg);
+    const result = await invoke("query_calendar_event_source",  {value:arg.startStr});
+    console.log("返回结果为" + result);
+    successCallback([{ title: 'event1', start: '2023-11-09' }, { title: 'event2', start: '2023-11-10' }]);
 
+    // failureCallback(new Error("请求数据错误"));
+}
+// const events = async(arg: EventSourceFuncArg, successCallback: (eventInputs: EventInput[]) => void, failureCallback: (error: Error) => void) => {
+//     console.log("请求日历数据" + arg);
 
+// }
 
 // 生命周期钩子
 onMounted(() => {
     console.log(`init `)
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new Calendar(calendarEl as HTMLElement, {
+        height: "auto",
+        plugins: [dayGridPlugin, interactionPlugin],
+        initialView: 'dayGridMonth',
+        eventClick: handleEventClick,
+        dateClick: handleDateClick,
+        eventTimeFormat: {
+            hour12: false
+        },
+        //https://fullcalendar.io/docs/events-json-feed#options
+        eventSources: [{
+            events: events as any,
+            id: "1",
+            color: 'background',
+        }],
+        locale: 'zh',
+        eventMouseEnter: handleEventMouseEnter,
+        eventMouseLeave: handleEventMouseLeave,
+    });
+    calendar.render();
+    watch(
+        () => { },
+        () => {
+            calendar.refetchEvents();
+        }
+    );
 })
 
 </script>
 
 
 <template>
-    <FullCalendar :options="calendarOptions"  ref="fullcalendarref" />
+    <div id="calendar" />
 </template>
