@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // https://blog.csdn.net/lfwoman/article/details/120177637
 // import FullCalendar from '@fullcalendar/vue3'
-import { Calendar, EventSourceFuncArg, EventClickArg, EventHoveringArg, EventInput, EventSourceFunc } from '@fullcalendar/core'
+import { Calendar,  EventClickArg, EventHoveringArg,  EventSourceFunc } from '@fullcalendar/core'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction'
 import { onMounted, watch } from 'vue'
