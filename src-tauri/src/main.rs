@@ -5,7 +5,7 @@ use chrono::NaiveDate;
 use thiserror::Error;
 
 #[derive(Error,serde::Serialize,serde::Deserialize,Debug,PartialEq, Eq, PartialOrd, Ord)]
-pub enum  ErrorInfo  {
+pub enum ErrorInfo  {
     #[error("未知的异常，错误信息为 `{0}`")]
     Unknown(String),
     #[error("发生错误，错误码为 `{0}` 错误信息为 `{1}`")]
