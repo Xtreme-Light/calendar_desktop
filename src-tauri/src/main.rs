@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use chrono::{NaiveDate, DateTime};
+use chrono::{NaiveDate, DateTime, Utc};
 use thiserror::Error;
 
 #[derive(Error, serde::Serialize, serde::Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -60,6 +60,7 @@ struct EventSrouceResp {
     border_color: Option<String>,
     text_color: Option<String>,
     // extended_props: Identity<Dictionary>;
+    #[serde(with = "my_date_format")]
     start: Option<NaiveDate>,
     end: Option<NaiveDate>,
     date: Option<NaiveDate>,
@@ -119,4 +120,47 @@ fn main() {
         .invoke_handler(tauri::generate_handler![greet, query_calendar_event_source])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+/// https://serde.rs/custom-date-format.html
+mod my_date_format {
+    use chrono::{DateTime, Utc, NaiveDateTime};
+    use serde::{self, Deserialize, Serializer, Deserializer};
+
+    const FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
+
+    // The signature of a serialize_with function must follow the pattern:
+    //
+    //    fn serialize<S>(&T, S) -> Result<S::Ok, S::Error>
+    //    where
+    //        S: Serializer
+    //
+    // although it may also be generic over the input types T.
+    pub fn serialize<S>(
+        date: &DateTime<Utc>,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let s = format!("{}", date.format(FORMAT));
+        serializer.serialize_str(&s)
+    }
+
+    // The signature of a deserialize_with function must follow the pattern:
+    //
+    //    fn deserialize<'de, D>(D) -> Result<T, D::Error>
+    //    where
+    //        D: Deserializer<'de>
+    //
+    // although it may also be generic over the output types T.
+    pub fn deserialize<'de, D>(
+        deserializer: D,
+    ) -> Result<DateTime<Utc>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        let dt = NaiveDateTime::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)?;
+        Ok(DateTime::<Utc>::from_naive_utc_and_offset(dt, Utc))
+    }
 }

@@ -32,7 +32,7 @@ const events: EventSourceFunc = async (arg, successCallback, _failureCallback) =
         start:arg.start,
         end:arg.end
     }
-    const result = await invoke("query_calendar_event_source",  req );
+    const result = await invoke("query_calendar_event_source",  {value:req} );
     console.log("返回结果为" + result);
     successCallback([{ title: 'event1', start: '2023-11-09' }, { title: 'event2', start: '2023-11-10' }]);
 
