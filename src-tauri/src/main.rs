@@ -1,10 +1,11 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use chrono::{NaiveDate, DateTime, Utc};
+use ::serde::{Deserialize, Serialize};
+use chrono::NaiveDate;
 use thiserror::Error;
 
-#[derive(Error, serde::Serialize, serde::Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Error, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ErrorInfo {
     #[error("未知的异常，错误信息为 `{0}`")]
     Unknown(String),
@@ -39,36 +40,57 @@ fn query_calendar_event_source(
         println!("this is end_str {:?}", time_zone);
     }
     let mut container: Vec<EventSrouceResp> = Vec::new();
-    container.push(EventSrouceResp::new().fill_title_and_start_date("测试数据", 2023,11,20));
-    container.push(EventSrouceResp::new().fill_title_and_start_date("测试数据2", 2023,11,21));
+    container.push(EventSrouceResp::new().fill_title_and_start_date("测试数据", 2023, 11, 20));
+    container.push(EventSrouceResp::new().fill_title_and_start_date("测试数据2", 2023, 11, 21));
     return Ok(container);
 }
-#[derive(serde::Serialize)]
+#[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct EventSrouceResp {
+    #[serde(skip_serializing_if = "Option::is_none")]
     display: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     editable: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     start_editable: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     duration_editable: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     constraint: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     overlap: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     allow: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     class_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     class_names: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     color: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     background_color: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     border_color: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     text_color: Option<String>,
     // extended_props: Identity<Dictionary>;
-    #[serde(with = "my_date_format")]
+    #[serde(with = "json_date",skip_serializing_if = "Option::is_none")]
     start: Option<NaiveDate>,
+    #[serde(with = "json_date",skip_serializing_if = "Option::is_none")]
     end: Option<NaiveDate>,
+    #[serde(with = "json_date",skip_serializing_if = "Option::is_none")]
     date: Option<NaiveDate>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     all_day: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     group_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     interactive: Option<bool>,
 }
 
@@ -99,15 +121,14 @@ impl EventSrouceResp {
             interactive: None,
         }
     }
-    fn fill_title_and_start_date(mut self,title:&str,year: i32, month: u32, day: u32) -> Self{
+    fn fill_title_and_start_date(mut self, title: &str, year: i32, month: u32, day: u32) -> Self {
         self.title = Some(title.to_string());
-        self.start = Some(NaiveDate::from_ymd_opt(year, month,day).unwrap());
+        self.start = Some(NaiveDate::from_ymd_opt(year, month, day).unwrap());
         self
     }
-
 }
 
-#[derive(serde::Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 struct EventSourceRequestReq {
     start: Option<NaiveDate>,
     end: Option<NaiveDate>,
@@ -122,11 +143,11 @@ fn main() {
         .expect("error while running tauri application");
 }
 /// https://serde.rs/custom-date-format.html
-mod my_date_format {
-    use chrono::{DateTime, Utc, NaiveDateTime};
-    use serde::{self, Deserialize, Serializer, Deserializer};
+mod json_date {
+    use chrono::NaiveDate;
+    use serde::{self, Deserialize, Deserializer, Serializer};
 
-    const FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
+    const FORMAT: &'static str = "%Y-%m-%d";
 
     // The signature of a serialize_with function must follow the pattern:
     //
@@ -135,15 +156,18 @@ mod my_date_format {
     //        S: Serializer
     //
     // although it may also be generic over the input types T.
-    pub fn serialize<S>(
-        date: &DateTime<Utc>,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(date: &Option<NaiveDate>, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        let s = format!("{}", date.format(FORMAT));
-        serializer.serialize_str(&s)
+        return match date {
+            Some(date) => {
+                let s = format!("{}", date.format(FORMAT));
+                serializer.serialize_str(&s)
+            },
+            None => serializer.serialize_str("null"),
+        }  
+
     }
 
     // The signature of a deserialize_with function must follow the pattern:
@@ -153,14 +177,55 @@ mod my_date_format {
     //        D: Deserializer<'de>
     //
     // although it may also be generic over the output types T.
-    pub fn deserialize<'de, D>(
-        deserializer: D,
-    ) -> Result<DateTime<Utc>, D::Error>
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<NaiveDate>, D::Error>
     where
         D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
-        let dt = NaiveDateTime::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)?;
-        Ok(DateTime::<Utc>::from_naive_utc_and_offset(dt, Utc))
+        if s.eq("null") {
+            return Ok(None)
+        }
+        let dt = NaiveDate::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)?;
+        Ok(Some(dt))
+    }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Person {
+    first_name: String,
+    last_name: String,
+}
+mod test {
+
+    use chrono::NaiveDate;
+    use serde::{Deserialize, Serialize};
+
+    use crate::json_date;
+    #[test]
+    fn test() {
+        let json_str = r#"
+      {
+        "timestamp": "2017-02-16",
+        "bidder": "Skrillex"
+      }
+    "#;
+
+        let data: StructWithCustomDate = serde_json::from_str(json_str).unwrap();
+        println!("{:#?}", data);
+
+        let serialized = serde_json::to_string_pretty(&data).unwrap();
+        println!("{}", serialized);
+    }
+
+    #[derive(Serialize, Deserialize, Debug)]
+    pub struct StructWithCustomDate {
+        // DateTime supports Serde out of the box, but uses RFC3339 format. Provide
+        // some custom logic to make it use our desired format.
+        #[serde(default,with = "json_date")]
+        pub timestamp: Option<NaiveDate>,
+
+        // Any other fields in the struct.
+        pub bidder: String,
     }
 }

@@ -1,40 +1,45 @@
 <script setup lang="ts">
 // https://blog.csdn.net/lfwoman/article/details/120177637
 // import FullCalendar from '@fullcalendar/vue3'
-import { Calendar,  EventClickArg, EventHoveringArg,  EventSourceFunc } from '@fullcalendar/core'
+import { Calendar, EventClickArg, EventHoveringArg, EventInput, EventSourceFunc } from '@fullcalendar/core'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction'
 import { onMounted, watch } from 'vue'
 import { invoke } from "@tauri-apps/api/tauri";
 
+import moment from 'moment';
+
 const handleEventClick = (eventClickInfo: EventClickArg) => {
-    console.log('any event' + eventClickInfo)
+    console.log('any event' + JSON.stringify(eventClickInfo))
 }
 
 
 const handleDateClick = (arg: DateClickArg) => {
-    console.log('date click! ' + arg.dateStr)
+    console.log('date click! ' + JSON.stringify(arg))
 
 }
 const handleEventMouseEnter = (arg: EventHoveringArg) => {
-    console.log('鼠标移入' + arg)
+    console.log('鼠标移入' + JSON.stringify(arg))
 }
 
 const handleEventMouseLeave = (arg: EventHoveringArg) => {
-    console.log('鼠标移出' + arg)
+    console.log('鼠标移出' + JSON.stringify(arg))
 }
 
 
 
 const events: EventSourceFunc = async (arg, successCallback, _failureCallback) => {
-    console.log("请求日历数据" + arg);
-    const req = {
-        start:arg.start,
-        end:arg.end
-    }
-    const result = await invoke("query_calendar_event_source",  {value:req} );
-    console.log("返回结果为" + result);
-    successCallback([{ title: 'event1', start: '2023-11-09' }, { title: 'event2', start: '2023-11-10' }]);
+    console.log("原始数据 " + JSON.stringify(arg));
+    let req = {
+        start: moment(arg.start).format("yyyy-MM-hh"),
+        end:moment(arg.end).format("yyyy-MM-hh"),
+        timeZone:arg.timeZone
+    };
+    console.log("请求数据 " + JSON.stringify(req));
+
+    const result:EventInput[] = await invoke("query_calendar_event_source", { value: req });
+    console.log("返回结果为",JSON.stringify(result));
+    successCallback(result);
 
     // failureCallback(new Error("请求数据错误"));
 }
@@ -60,7 +65,8 @@ onMounted(() => {
         eventSources: [{
             events: events as any,
             id: "1",
-            color: 'background',
+            color: 'yellow',
+            textColor: 'black'
         }],
         locale: 'zh',
         eventMouseEnter: handleEventMouseEnter,

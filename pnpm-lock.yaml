@@ -20,6 +20,9 @@ dependencies:
   '@tauri-apps/api':
     specifier: ^1.5.0
     version: 1.5.1
+  moment:
+    specifier: ^2.29.4
+    version: 2.29.4
   vue:
     specifier: ^3.3.4
     version: 3.3.8(typescript@5.2.2)
@@ -619,6 +622,10 @@ packages:
     dependencies:
       brace-expansion: 2.0.1
     dev: true
+
+  /moment@2.29.4:
+    resolution: {integrity: sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==}
+    dev: false
 
   /muggle-string@0.3.1:
     resolution: {integrity: sha512-ckmWDJjphvd/FvZawgygcUeQCxzvohjFO5RxTjj4eq8kw359gFF3E1brjfI+viLMxss5JrHTDRHZvu2/tuy0Qg==}
