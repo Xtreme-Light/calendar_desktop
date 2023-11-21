@@ -28,7 +28,11 @@ const handleEventMouseLeave = (arg: EventHoveringArg) => {
 
 const events: EventSourceFunc = async (arg, successCallback, _failureCallback) => {
     console.log("请求日历数据" + arg);
-    const result = await invoke("query_calendar_event_source",  {value:arg.startStr});
+    const req = {
+        start:arg.start,
+        end:arg.end
+    }
+    const result = await invoke("query_calendar_event_source",  req );
     console.log("返回结果为" + result);
     successCallback([{ title: 'event1', start: '2023-11-09' }, { title: 'event2', start: '2023-11-10' }]);
 
