@@ -4,9 +4,10 @@
 import { Calendar, EventClickArg, EventHoveringArg, EventInput, EventSourceFunc } from '@fullcalendar/core'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction'
-import { onMounted, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { invoke } from "@tauri-apps/api/tauri";
 
+import Dialog from './dialog.vue';
 import moment from 'moment';
 
 const handleEventClick = (eventClickInfo: EventClickArg) => {
@@ -26,7 +27,7 @@ const handleEventMouseLeave = (arg: EventHoveringArg) => {
     console.log('鼠标移出' + JSON.stringify(arg))
 }
 
-
+let data = ref<EventInput[]>([]);
 
 const events: EventSourceFunc = async (arg, successCallback, _failureCallback) => {
     console.log("原始数据 " + JSON.stringify(arg));
@@ -39,6 +40,7 @@ const events: EventSourceFunc = async (arg, successCallback, _failureCallback) =
 
     const result:EventInput[] = await invoke("query_calendar_event_source", { value: req });
     console.log("返回结果为",JSON.stringify(result));
+    data.value = result;
     successCallback(result);
 
     // failureCallback(new Error("请求数据错误"));
@@ -74,7 +76,7 @@ onMounted(() => {
     });
     calendar.render();
     watch(
-        () => { },
+        () => { data.value},
         () => {
             calendar.refetchEvents();
         }
@@ -86,4 +88,5 @@ onMounted(() => {
 
 <template>
     <div id="calendar" />
+    <Dialog/>
 </template>
