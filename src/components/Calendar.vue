@@ -7,8 +7,13 @@ import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction'
 import { onMounted, ref, watch } from 'vue'
 import { invoke } from "@tauri-apps/api/tauri";
 
-import Dialog from './dialog.vue';
+import Dialog from './Dialog.vue';
 import moment from 'moment';
+
+// 在父组件中给子组件的props传入必要的值，且父组件给子组件传值是单向的，子组件不应该在自己内部更改props的值
+const height = ref<String>("auto");
+const width = ref<String>("90%");
+const showDialog = ref<Boolean>(false);
 
 const handleEventClick = (eventClickInfo: EventClickArg) => {
     console.log('any event' + JSON.stringify(eventClickInfo))
@@ -16,8 +21,8 @@ const handleEventClick = (eventClickInfo: EventClickArg) => {
 
 
 const handleDateClick = (arg: DateClickArg) => {
-    console.log('date click! ' + JSON.stringify(arg))
-
+    console.log('date click! ' + JSON.stringify(arg));
+    showDialog.value = true;
 }
 const handleEventMouseEnter = (arg: EventHoveringArg) => {
     console.log('鼠标移入' + JSON.stringify(arg))
@@ -88,5 +93,5 @@ onMounted(() => {
 
 <template>
     <div id="calendar" />
-    <Dialog/>
+    <Dialog :height="height" :width="width" :show="showDialog"></Dialog>
 </template>
