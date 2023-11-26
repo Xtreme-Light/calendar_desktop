@@ -6,7 +6,7 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction'
 import { onMounted, ref, watch } from 'vue'
 import { invoke } from "@tauri-apps/api/tauri";
-import { showDialog} from "./dialog"
+import { showDialog} from "./dialog/dialog.js"
 
 import moment from 'moment';
 

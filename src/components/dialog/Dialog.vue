@@ -3,10 +3,15 @@
         <div class="input-box-wrapper" v-show="show">
             <div class="dialog-box" :style="`height:${dialogHeight};width:${dialogWidth};`">
                 <div class="dialog-header">
-                    <div class="litter-close" @click="close">x</div>
+                    <div class="dialog-title"><span>这是标题</span></div>
+                    <button type="button" class="dialog-close" aria-label="Close this dialog" @click="cancel">
+                        <el-icon>
+                            <CircleClose />
+                        </el-icon>
+                    </button>
                 </div>
                 <hr />
-                <div>
+                <div class="dialog-content">
                     <div>
                         <el-input type="text" v-model="title" placeholder="请输入事件标题"></el-input>
                     </div>
@@ -24,7 +29,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, } from 'vue';
 // 在使用ts进行runtime-only编译该vue模版时，全局导入的element-plus不生效，需要局部指定导入。
-import { ElButton,ElInput } from 'element-plus';
+import { ElButton, ElInput, ElIcon } from 'element-plus';
+import { CircleClose } from '@element-plus/icons-vue';
+
+
+
 const props = defineProps({
     height: { type: String, required: true },
     width: { type: String, required: true },
@@ -37,30 +46,30 @@ const show = ref(false);
 const title = ref<String>("");
 const content = ref("请输入事件内容");
 
-onMounted(() => {
 
-    document.addEventListener("dialog-show",(event:any) =>{
+onMounted(() => {
+    document.addEventListener("dialog-show", (e: Event) => {
         // TODO 有没有别的方式来转换event
-        const event2 = event as CustomEvent;
-        show.value = event2.detail.show;
+        if (e instanceof CustomEvent) {
+            if (e?.detail?.show) {
+                // do something
+                console.log("接收到弹窗确认事件" + JSON.stringify(e));
+                show.value = e.detail.show;
+            }
+        }
     });
 });
 // 根据ts中的定义，提供一个限定的函数,根据WatchCallback定义，接受新值，老值，一个回调函数，改回调函数用于处理副作用
 
 // 监听props中的值，发生变化时执行相应的操作
 
-
-const close = (event:Event) => {
-    console.log("关闭事件" + JSON.stringify(event));
-}
-
 const confirm = (event: Event) => {
     console.log("内容是" + JSON.stringify(event));
     console.log("获取到的" + title.value);
     console.log("获取到的" + content.value);
     console.log("发送弹窗确认事件");
-    const customEvent = new CustomEvent("dialog-confirm",{
-        detail:{
+    const customEvent = new CustomEvent("dialog-confirm", {
+        detail: {
             title: title.value,
             content: content.value,
         }
@@ -70,9 +79,90 @@ const confirm = (event: Event) => {
     show.value = false;
 }
 
+
+const cancel = () => {
+    console.log("用户取消弹窗");
+    show.value = false;
+    clear();
+}
+
+const clear = () => {
+    console.log("清除内容");
+    title.value = "";
+    content.value = "";
+}
 </script>
 <style scoped>
 .input-box-wrapper {
+    z-index: 2011;
+    text-align: center;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 16px;
+    overflow: auto;
+}
+
+.dialog-box {
+    display: inline-block;
+    max-width: var(--el-messagebox-width);
+    width: 100%;
+    padding-bottom: 10px;
+    vertical-align: middle;
+    background-color: var(--el-bg-color);
+    border-radius: var(--el-messagebox-border-radius);
+    border: 1px solid var(--el-border-color-lighter);
+    font-size: var(--el-messagebox-font-size);
+    box-shadow: var(--el-box-shadow-light);
+    text-align: left;
+    overflow: hidden;
+    backface-visibility: hidden;
+    box-sizing: border-box;
+}
+
+.dialog-box .dialog-close {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.dialog-box .dialog-header {
+    position: relative;
+    padding: var(--el-messagebox-padding-primary);
+    padding-bottom: 10px;
+}
+
+.dialog-box .dialog-title {
+    padding-left: 0;
+    margin-bottom: 0;
+    font-size: var(--el-messagebox-font-size);
+    line-height: 1;
+    color: var(--el-messagebox-title-color);
+}
+
+.dialog-content {
+    padding: 10px var(--el-messagebox-padding-primary);
+    color: var(--el-messagebox-content-color);
+    font-size: var(--el-messagebox-content-font-size);
+}
+
+.dialog-btn-wrapper {
+    padding: 5px 15px 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+/* .input-box-wrapper {
 
     position: fixed;
     top: 30%;
@@ -107,7 +197,7 @@ const confirm = (event: Event) => {
     padding: 0 7px;
 }
 
-​ .input-box-wrapper .little-close {
+.input-box-wrapper .little-close {
     color: var(--main-color);
     padding: 0 10px;
     background-color: rgb(255, 255, 255);
@@ -117,7 +207,7 @@ const confirm = (event: Event) => {
     -webkit-transition: 0.3s;
 }
 
-​ .input-box-wrapper .little-close:hover {
+.input-box-wrapper .little-close:hover {
     background-color: var(--main-color);
     color: white;
     transition: 0.3s;
@@ -136,5 +226,4 @@ const confirm = (event: Event) => {
 .dialog-btn-wrapper {
     display: flex;
     flex-direction: row-reverse;
-}
-</style>
+} */</style>

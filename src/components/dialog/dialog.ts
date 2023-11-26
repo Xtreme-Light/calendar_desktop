@@ -45,11 +45,14 @@ class Dialog {
         document.dispatchEvent(event);
     
         return new Promise((resolve) => {
-            document.addEventListener('dialog-confirm',(event) => {
-                const evnet2 =  event as CustomEvent;
-                const content = evnet2.detail.content;
-                console.log("接收到弹窗确认事件" + JSON.stringify(evnet2));
-                resolve(content);
+            document.addEventListener('dialog-confirm',(e) => {
+                if (e instanceof CustomEvent) {
+                    if (e?.detail?.content) {
+                      // do something
+                      console.log("接收到弹窗确认事件" + JSON.stringify(e));
+                      resolve(e.detail.content);
+                    }
+                  }
             });
         });
     }

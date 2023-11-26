@@ -3,7 +3,7 @@ import "./styles.css";
 import App from "./App.vue";
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
-import installDialog from './components/dialog'
+import installDialog from './components/dialog/dialog'
 const app = createApp(App);
 app.use(ElementPlus);
 app.mount("#app");
@@ -12,5 +12,3 @@ app.config.errorHandler = (err) => {
     console.log("出现错误", err);
 }
 installDialog();
-
-
