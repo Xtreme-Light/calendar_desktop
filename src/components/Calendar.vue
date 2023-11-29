@@ -7,8 +7,8 @@ import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction'
 import { onMounted, ref, watch } from 'vue'
 import { invoke } from "@tauri-apps/api/tauri";
 import { showDialog} from "./dialog/dialog.js"
-
 import moment from 'moment';
+import { ElMessage } from 'element-plus'
 
 // 在父组件中给子组件的props传入必要的值，且父组件给子组件传值是单向的，子组件不应该在自己内部更改props的值
 const height = ref<String>("auto");
@@ -21,16 +21,23 @@ const handleEventClick = (eventClickInfo: EventClickArg) => {
 
 const handleDateClick = (arg: DateClickArg) => {
     console.log('date click! ' + JSON.stringify(arg));
-    showDialog("请输入事件内容");
+    showDialog({
+        title: "添加事件",
+        content:"",
+        width: width.value,
+        height: height.value,
+    });
 }
 const handleEventMouseEnter = (arg: EventHoveringArg) => {
-    console.log('鼠标移入' + JSON.stringify(arg))
+    console.log('鼠标移入' + JSON.stringify(arg));
+    ElMessage("鼠标移入");
 }
 
 const handleEventMouseLeave = (arg: EventHoveringArg) => {
     console.log('鼠标移出' + JSON.stringify(arg))
+    ElMessage("鼠标移出");
 }
-
+// 日历事件
 let data = ref<EventInput[]>([]);
 
 const events: EventSourceFunc = async (arg, successCallback, _failureCallback) => {
@@ -47,12 +54,9 @@ const events: EventSourceFunc = async (arg, successCallback, _failureCallback) =
     data.value = result;
     successCallback(result);
 
-    // failureCallback(new Error("请求数据错误"));
-}
-// const events = async(arg: EventSourceFuncArg, successCallback: (eventInputs: EventInput[]) => void, failureCallback: (error: Error) => void) => {
-//     console.log("请求日历数据" + arg);
 
-// }
+}
+
 
 // 生命周期钩子
 onMounted(() => {

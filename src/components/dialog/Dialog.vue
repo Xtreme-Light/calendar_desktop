@@ -49,7 +49,7 @@ const content = ref("请输入事件内容");
 
 onMounted(() => {
     document.addEventListener("dialog-show", (e: Event) => {
-        // TODO 有没有别的方式来转换event
+        // 有没有别的方式来转换event 没有特别好的方式，如下方式比较好
         if (e instanceof CustomEvent) {
             if (e?.detail?.show) {
                 // do something
