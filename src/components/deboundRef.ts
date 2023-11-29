@@ -6,7 +6,7 @@ import { customRef } from "vue";
  * @param duration - 更新延迟的时间（默认为1000ms）
  * @returns 一个引用对象，包含get和set方法
  */
-export function debounceRef(value: any, duration: number = 1000) {
+export function debounceRef<T>(value: T, duration: number = 1000) {
     return customRef((track, trigger) => {
         let timer: number;
         return {

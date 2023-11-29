@@ -31,7 +31,7 @@ import { computed, onMounted, ref, } from 'vue';
 // 在使用ts进行runtime-only编译该vue模版时，全局导入的element-plus不生效，需要局部指定导入。
 import { ElButton, ElInput, ElIcon } from 'element-plus';
 import { CircleClose } from '@element-plus/icons-vue';
-
+import { debounceRef } from '../deboundRef';
 
 
 const props = defineProps({
@@ -43,8 +43,8 @@ const props = defineProps({
 const dialogWidth = computed(() => (props.width ? props.width : "30%"));
 const dialogHeight = computed(() => props.height ? props.height : "auto");
 const show = ref(false);
-const title = ref<String>("");
-const content = ref("请输入事件内容");
+const title = debounceRef<String>("");
+const content = debounceRef<String>("请输入事件内容");
 
 
 onMounted(() => {
