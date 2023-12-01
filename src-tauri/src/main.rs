@@ -4,13 +4,18 @@
 use ::serde::{Deserialize, Serialize};
 use chrono::NaiveDate;
 use thiserror::Error;
-
+use tauri::{Manager};
 #[derive(Error, Serialize, Deserialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ErrorInfo {
     #[error("未知的异常，错误信息为 `{0}`")]
     Unknown(String),
     #[error("发生错误，错误码为 `{0}` 错误信息为 `{1}`")]
     Info(u16, String),
+}
+#[derive(Clone, serde::Serialize)]
+struct Payload {
+    args: Vec<String>,
+    cwd: String,
 }
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -74,11 +79,11 @@ struct EventSrouceResp {
     #[serde(skip_serializing_if = "Option::is_none")]
     text_color: Option<String>,
     // extended_props: Identity<Dictionary>;
-    #[serde(with = "json_date",skip_serializing_if = "Option::is_none")]
+    #[serde(with = "json_date", skip_serializing_if = "Option::is_none")]
     start: Option<NaiveDate>,
-    #[serde(with = "json_date",skip_serializing_if = "Option::is_none")]
+    #[serde(with = "json_date", skip_serializing_if = "Option::is_none")]
     end: Option<NaiveDate>,
-    #[serde(with = "json_date",skip_serializing_if = "Option::is_none")]
+    #[serde(with = "json_date", skip_serializing_if = "Option::is_none")]
     date: Option<NaiveDate>,
     #[serde(skip_serializing_if = "Option::is_none")]
     all_day: Option<bool>,
@@ -138,6 +143,12 @@ struct EventSourceRequestReq {
 }
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+            println!("{}, {argv:?}, {cwd}", app.package_info().name);
+
+            app.emit_all("single-instance", Payload { args: argv, cwd })
+                .unwrap();
+        }))
         .invoke_handler(tauri::generate_handler![greet, query_calendar_event_source])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -164,10 +175,9 @@ mod json_date {
             Some(date) => {
                 let s = format!("{}", date.format(FORMAT));
                 serializer.serialize_str(&s)
-            },
+            }
             None => serializer.serialize_str("null"),
-        }  
-
+        };
     }
 
     // The signature of a deserialize_with function must follow the pattern:
@@ -183,7 +193,7 @@ mod json_date {
     {
         let s = String::deserialize(deserializer)?;
         if s.eq("null") {
-            return Ok(None)
+            return Ok(None);
         }
         let dt = NaiveDate::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)?;
         Ok(Some(dt))
@@ -222,7 +232,7 @@ mod test {
     pub struct StructWithCustomDate {
         // DateTime supports Serde out of the box, but uses RFC3339 format. Provide
         // some custom logic to make it use our desired format.
-        #[serde(default,with = "json_date")]
+        #[serde(default, with = "json_date")]
         pub timestamp: Option<NaiveDate>,
 
         // Any other fields in the struct.
